@@ -1,3 +1,18 @@
+fn hello_world() -> &'static str {
+    &"Hello, world!"
+}
 fn main() {
-    println!("Hello, world!");
+    let msg = hello_world();
+    println!("{}", msg);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_testing() {
+        let answer = hello_world();
+        assert_eq!(answer, "Hello, world!");
+    }
 }
