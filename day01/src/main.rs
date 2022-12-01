@@ -29,22 +29,20 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
+    static TEST_INPUT: [&str; 14] = [
+        "1000", "2000", "3000", "", "4000", "", "5000", "6000", "", "7000", "8000", "9000", "",
+        "10000",
+    ];
+
+    use super::*;
     #[test]
     fn test_part_one() {
-        let test_input = [
-            "1000", "2000", "3000", "", "4000", "", "5000", "6000", "", "7000", "8000", "9000", "",
-            "10000",
-        ];
-        assert_eq!(part_one(&test_input), 24000);
+        assert_eq!(part_one(&TEST_INPUT), 24000);
     }
+
     #[test]
     fn test_part_two() {
-        let test_input = [
-            "1000", "2000", "3000", "", "4000", "", "5000", "6000", "", "7000", "8000", "9000", "",
-            "10000",
-        ];
-        assert_eq!(part_two(&test_input), 45000);
+        assert_eq!(part_two(&TEST_INPUT), 45000);
     }
 }
