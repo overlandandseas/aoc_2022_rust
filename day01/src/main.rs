@@ -1,17 +1,13 @@
 fn elves_array(input: &[&str]) -> Vec<u32> {
-    let mut arr = vec![];
-    let mut current_calories = 0;
-    input.iter().for_each(|item| match item.parse::<u32>() {
-        Ok(result) => {
-            current_calories = current_calories + result;
+    input.iter().fold(vec![], |mut acc, item| -> Vec<u32> {
+        if let Ok(result) = item.parse::<u32>() {
+            let end = acc.pop().unwrap_or(0);
+            acc.push(end + result);
+        } else {
+            acc.push(0);
         }
-        Err(_) => {
-            arr.push(current_calories);
-            current_calories = 0;
-        }
-    });
-    arr.push(current_calories);
-    arr
+        acc
+    })
 }
 fn part_one(input: &[&str]) -> u32 {
     let arr = elves_array(input);
