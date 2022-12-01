@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 fn elves_array(input: &[&str]) -> Vec<u32> {
     input.iter().fold(vec![], |mut acc, item| -> Vec<u32> {
         if let Ok(result) = item.parse::<u32>() {
@@ -25,6 +27,30 @@ fn main() {
 
     println!("Part 1: {}", part_one(&input_slice));
     println!("Part 2: {}", part_two(&input_slice));
+
+    // Part 1 one liner
+    let one_liner_part_one: u32 = include_str!("../input")
+        .split("\n\n")
+        .map(|group| group.lines().map(|item| item.parse::<u32>().unwrap()).sum())
+        .max()
+        .unwrap();
+
+    // Part 2 one liner
+    let one_liner_part_two: u32 = include_str!("../input")
+        .split("\n\n")
+        .map(|group| {
+            group
+                .lines()
+                .map(|item| item.parse::<u32>().unwrap())
+                .sum::<u32>()
+        })
+        .sorted()
+        .rev()
+        .take(3)
+        .sum();
+
+    println!("Part 1 (one liner): {}", one_liner_part_one);
+    println!("Part 2 (one liner): {}", one_liner_part_two);
 }
 
 #[cfg(test)]
