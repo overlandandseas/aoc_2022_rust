@@ -6,14 +6,14 @@ static ALPHA_TO_DIGIT: &str = "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV
 fn part_one(input: &str) -> usize {
     input
         .lines()
-        .map(|rucksack| {
+        .flat_map(|rucksack| {
             let compartments = rucksack.split_at(rucksack.len() / 2);
-            let common_item = compartments
+            compartments
                 .0
                 .chars()
-                .nth(compartments.0.find(|c| compartments.1.contains(c)).unwrap())
-                .unwrap();
-            ALPHA_TO_DIGIT.find(common_item).unwrap()
+                .find(|c| compartments.1.contains(c.clone()))
+                .map(|common_item| ALPHA_TO_DIGIT.find(common_item))
+                .unwrap()
         })
         .sum()
 }
@@ -23,17 +23,20 @@ fn part_two(input: &str) -> usize {
         .lines()
         .chunks(3)
         .into_iter()
-        .map(|group| {
-            let mut badge_letter = group.fold(String::new(), |acc, elf| {
-                if acc.len() == 0 {
-                    return elf.to_owned();
-                }
-                let acc_set: HashSet<char> = HashSet::from_iter(acc.chars());
-                let elf_set: HashSet<char> = HashSet::from_iter(elf.chars());
+        .flat_map(|group| {
+            group
+                .fold(String::new(), |acc, elf| {
+                    if acc.is_empty() {
+                        return elf.to_owned();
+                    }
+                    let acc_set: HashSet<char> = HashSet::from_iter(acc.chars());
+                    let elf_set: HashSet<char> = HashSet::from_iter(elf.chars());
 
-                acc_set.intersection(&elf_set).join("")
-            });
-            ALPHA_TO_DIGIT.find(badge_letter.pop().unwrap()).unwrap()
+                    acc_set.intersection(&elf_set).join("")
+                })
+                .pop()
+                .map(|badge| ALPHA_TO_DIGIT.find(badge))
+                .unwrap()
         })
         .sum()
 }
