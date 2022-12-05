@@ -1,83 +1,139 @@
+#![feature(map_many_mut)]
 use std::collections::HashMap;
+
+#[derive(Debug)]
+struct Supplies {
+    name: char,
+}
+
+impl Supplies {
+    fn new(input: String) -> Option<Supplies> {
+        if input.starts_with("[") {
+            input.chars().nth(1).map(|c| Supplies { name: c })
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug)]
+struct Platform {
+    stack: Vec<Supplies>,
+}
+
+impl Platform {
+    fn pop(&mut self, num: usize, at_once: bool) -> Vec<Supplies> {
+        let mut temp_stack = vec![];
+        for _ in 0..num {
+            if let Some(crat) = self.stack.pop() {
+                temp_stack.push(crat)
+            }
+        }
+        if at_once {
+            temp_stack.reverse();
+        }
+        temp_stack
+    }
+
+    fn push(&mut self, mut stack: Vec<Supplies>) {
+        self.stack.append(&mut stack);
+    }
+
+    fn get_top_shelf_name(&self) -> char {
+        self.stack.last().unwrap().name
+    }
+}
+
+#[derive(Debug)]
+struct CargoShip {
+    containers: HashMap<PlatformName, Platform>,
+}
+
+type PlatformName = usize;
+
+impl CargoShip {
+    fn transfer(&mut self, amount: usize, from: PlatformName, to: PlatformName, at_once: bool) {
+        if let Some(from_platform) = self.containers.get_mut(&from) {
+            let popped = from_platform.pop(amount, at_once);
+            if let Some(to_platform) = self.containers.get_mut(&to) {
+                to_platform.push(popped);
+            }
+        }
+    }
+
+    fn add_supplies(&mut self, location: PlatformName, supplies: Supplies) {
+        if let Some(platform) = self.containers.get_mut(&location) {
+            platform.push(vec![supplies]);
+        } else {
+            self.containers.insert(
+                location,
+                Platform {
+                    stack: vec![supplies],
+                },
+            );
+        }
+    }
+
+    fn get_top_shelf_str(&mut self) -> String {
+        let mut keys = self.containers.keys().collect::<Vec<_>>();
+        keys.sort();
+
+        keys.iter()
+            .flat_map(|key| {
+                self.containers
+                    .get(key)
+                    .map(|platform| platform.get_top_shelf_name())
+            })
+            .collect::<String>()
+    }
+}
 
 fn part_one(input: &str) -> String {
     let (stacks, instructions) = input.split_once("\n\n").unwrap();
-    let mut stacks_map = get_stacks(stacks);
+
+    let mut cargo_ship = load_ship(stacks);
     instructions.lines().for_each(|instruction| {
-        let inst = instruction
+        let step = instruction
             .split(" ")
             .flat_map(str::parse::<usize>)
             .collect::<Vec<usize>>();
-        let mut temp_arr: Vec<char> = vec![];
-        for _ in 0..inst[0] {
-            temp_arr.push(stacks_map.get_mut(&inst[1]).unwrap().pop().unwrap());
-        }
-        for val in temp_arr {
-            stacks_map.get_mut(&inst[2]).unwrap().push(val.to_owned());
-        }
+        cargo_ship.transfer(step[0], step[1], step[2], false);
     });
-    let mut string_king = String::new();
-    for key in 1..stacks_map.len() + 1 {
-        string_king.push(stacks_map.get_mut(&key).unwrap().pop().unwrap());
-    }
-    string_king
+
+    cargo_ship.get_top_shelf_str()
 }
 fn part_two(input: &str) -> String {
     let (stacks, instructions) = input.split_once("\n\n").unwrap();
-    let mut stacks_map = get_stacks(stacks);
+
+    let mut cargo_ship = load_ship(stacks);
     instructions.lines().for_each(|instruction| {
-        let inst = instruction
+        let step = instruction
             .split(" ")
             .flat_map(str::parse::<usize>)
             .collect::<Vec<usize>>();
-        let mut temp_arr: Vec<char> = vec![];
-        for _ in 0..inst[0] {
-            temp_arr.push(stacks_map.get_mut(&inst[1]).unwrap().pop().unwrap());
-        }
-        for val in temp_arr.iter().rev() {
-            stacks_map.get_mut(&inst[2]).unwrap().push(val.to_owned());
-        }
+        cargo_ship.transfer(step[0], step[1], step[2], true);
     });
-    let mut string_king = String::new();
-    for key in 1..stacks_map.len() + 1 {
-        string_king.push(stacks_map.get_mut(&key).unwrap().pop().unwrap());
-    }
-    string_king
+
+    cargo_ship.get_top_shelf_str()
 }
 
-fn get_stacks(stacks: &str) -> HashMap<usize, Vec<char>> {
-    let mut stacks_map: HashMap<usize, Vec<char>> = HashMap::new();
-    stacks.lines().rev().skip(1).for_each(|row| {
-        let each_crate = get_crates(row);
-        for (index, crat) in each_crate.iter().enumerate() {
-            if !crat.is_whitespace() {
-                if stacks_map.contains_key(&(index + 1)) {
-                    stacks_map
-                        .get_mut(&(index + 1))
-                        .unwrap()
-                        .push(crat.to_owned())
-                } else {
-                    stacks_map.insert(index + 1, vec![crat.to_owned()]);
-                }
-            }
-        }
-    });
-    stacks_map
-}
+fn load_ship(input: &str) -> CargoShip {
+    let mut cargo_ship = CargoShip {
+        containers: HashMap::new(),
+    };
 
-fn get_crates(row: &str) -> Vec<char> {
-    let binding = row.chars().collect::<Vec<char>>();
-    binding
-        .chunks(4)
-        .map(|c_arr| c_arr.iter().collect::<String>())
-        .map(|crat| {
-            if crat.starts_with("[") {
-                crat.chars().nth(1).unwrap()
-            } else {
-                ' '
-            }
-        })
-        .collect::<Vec<_>>()
+    input.lines().rev().skip(1).for_each(|row| {
+        row.chars()
+            .collect::<Vec<char>>()
+            .chunks(4)
+            .map(|char_arr| char_arr.iter().collect::<String>())
+            .enumerate()
+            .flat_map(|(index, input_str)| Supplies::new(input_str).map(|s| (index, s)))
+            .for_each(|(index, supplies)| {
+                cargo_ship.add_supplies(index + 1, supplies);
+            });
+    });
+    cargo_ship
 }
 
 fn main() {
