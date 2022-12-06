@@ -10,11 +10,10 @@ fn part_two(input: &str) -> usize {
 
 fn get_first_unique(input: &str, n: usize) -> usize {
     input
-        .chars()
-        .collect::<Vec<char>>()
+        .as_bytes()
         .windows(n)
         .enumerate()
-        .find(|(_index, window)| window.iter().collect::<HashSet<&char>>().len() == n)
+        .find(|(_index, window)| window.iter().collect::<HashSet<_>>().len() == n)
         .unwrap()
         .0
         + n
@@ -38,6 +37,7 @@ mod tests {
         assert_eq!(part_one("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg"), 10);
         assert_eq!(part_one("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"), 11);
     }
+
     #[test]
     fn test_part_two() {
         assert_eq!(part_two("mjqjpqmgbljsphdztnvjfqwrcgsmlb"), 19);
