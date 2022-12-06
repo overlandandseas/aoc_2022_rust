@@ -12,10 +12,8 @@ fn get_first_unique(input: &str, n: usize) -> usize {
     input
         .as_bytes()
         .windows(n)
-        .enumerate()
-        .find(|(_index, window)| window.iter().collect::<HashSet<_>>().len() == n)
+        .position(|window| window.iter().collect::<HashSet<_>>().len() == n)
         .unwrap()
-        .0
         + n
 }
 fn main() {
